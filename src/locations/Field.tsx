@@ -18,6 +18,8 @@ import { CycleIcon, InfoCircleIcon, LinkIcon } from "@contentful/f36-icons";
 import { useEffect, useState } from "react";
 import { slugify, makeSlug } from "@contentful/field-editor-slug";
 import get from "lodash.get";
+import { createClient } from "contentful-management";
+import { EntryStatus, getEntryStatus } from "../utils";
 
 const styles = {
   fixFocus: css({
@@ -37,6 +39,17 @@ function fillTheTemplate(template: string, data: Record<string, any>) {
 
 const Field = () => {
   const sdk = useSDK<FieldAppSDK>();
+  const cma = createClient(
+    { apiAdapter: sdk.cmaAdapter },
+    {
+      type: "plain",
+      defaults: {
+        environmentId: sdk.ids.environmentAlias ?? sdk.ids.environment,
+        spaceId: sdk.ids.space,
+      },
+    }
+  );
+
   const entrySys = sdk.entry.getSys();
   const fields = sdk.entry.fields;
 
@@ -56,12 +69,22 @@ const Field = () => {
   const [textFields, setTextFields] = useState(collectTextFields());
   const [rawSlugFieldValue, setRawSlugFieldValue] = useState(slugFieldValue);
 
-  const { instance, installation } = sdk.parameters;
-  const { template, fieldToSlugify } = instance;
+  const { instance, installation, installation: { previewEnabled = false } } = sdk.parameters;
+  const { template, previewTemplate, fieldToSlugify } =
+    instance;
 
   const resultingUrl = fillTheTemplate(template, {
     fields: textFields,
     siteUrl: "",
+    previewSiteUrl: "",
+    slug: slugFieldValue,
+    ...installation,
+  }).replace(/(?<!:)\/{2,}/g, "/");
+
+  const resultingPreviewUrl = fillTheTemplate(previewTemplate, {
+    fields: textFields,
+    siteUrl: "",
+    previewSiteUrl: "",
     slug: slugFieldValue,
     ...installation,
   }).replace(/(?<!:)\/{2,}/g, "/");
@@ -118,6 +141,23 @@ const Field = () => {
   };
 
   useAutoResizer();
+
+  const isDraftInitially = getEntryStatus(entrySys) === EntryStatus.DRAFT;
+  const isArchivedInitially = getEntryStatus(entrySys) === EntryStatus.ARCHIVED;
+
+  const [showURL, setShowURL] = useState(!isDraftInitially && !isArchivedInitially);
+  const [showPreviewURL, setShowPreviewURL] = useState(previewEnabled && !isArchivedInitially);
+
+  sdk.entry.onSysChanged((sys) => {
+    cma.entry.get({
+      entryId: sys.id,
+    }).then((entry) => {
+      const status = getEntryStatus(entry.sys);
+      setShowURL(status !== EntryStatus.DRAFT && status !== EntryStatus.ARCHIVED);
+      setShowPreviewURL(previewEnabled && status !== EntryStatus.ARCHIVED);
+    });
+  });
+
   return (
     <Stack flexDirection="column" alignItems="flex-start">
       <TextInput.Group className={styles.fixFocus}>
@@ -136,22 +176,43 @@ const Field = () => {
           aria-label="Unlock"
         />
       </TextInput.Group>
-
-      <Tooltip
-        placement="top-start"
-        id="url-tooltip"
-        content={`Template "${template}" was used to generate this URL.`}
-      >
-        <Flex>
-          <InfoCircleIcon className={styles.infoIcon} />
-          <span>Resulting url </span>
-        </Flex>
-      </Tooltip>
-
-      {slugFieldValue && (
-        <TextLink target="_blank" href={resultingUrl}>
-          {resultingUrl}
-        </TextLink>
+      {showURL && (
+        <>
+          <Tooltip
+            placement="top-start"
+            id="url-tooltip"
+            content={`Template "${template}" was used to generate this URL.`}
+          >
+            <Flex>
+              <InfoCircleIcon className={styles.infoIcon} />
+              <span>URL</span>
+            </Flex>
+          </Tooltip>
+          {resultingUrl && (
+            <TextLink target="_blank" href={resultingUrl}>
+              {resultingUrl}
+            </TextLink>
+          )}
+        </>
+      )}
+      {showPreviewURL && (
+        <>
+          <Tooltip
+            placement="top-start"
+            id="url-tooltip"
+            content={`Template "${previewTemplate}" was used to generate this URL.`}
+          >
+            <Flex>
+              <InfoCircleIcon className={styles.infoIcon} />
+              <span>Preview URL </span>
+            </Flex>
+          </Tooltip>
+          {resultingPreviewUrl && (
+            <TextLink target="_blank" href={resultingPreviewUrl}>
+              {resultingPreviewUrl}
+            </TextLink>
+          )}
+        </>
       )}
     </Stack>
   );

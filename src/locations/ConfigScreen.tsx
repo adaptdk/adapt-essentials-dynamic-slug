@@ -4,6 +4,7 @@ import {
   Form,
   FormControl,
   Heading,
+  Switch,
   TextInput,
 } from "@contentful/f36-components";
 import { /* useCMA, */ useSDK } from "@contentful/react-apps-toolkit";
@@ -12,6 +13,8 @@ import { useCallback, useEffect, useState } from "react";
 
 export interface AppInstallationParameters {
   siteUrl?: string;
+  previewEnabled?: boolean;
+  sitePreviewUrl?: string;
 }
 
 const ConfigScreen = () => {
@@ -89,9 +92,50 @@ const ConfigScreen = () => {
           />
           <FormControl.HelpText>
             Provide the site URL. This parameter can be used as {"{siteUrl}"} in
-            your slug template.
+            your URL template.
           </FormControl.HelpText>
         </FormControl>
+        <FormControl isRequired>
+          <Switch
+            name="switch-cookies-choice"
+            id="switch-cookies-choice"
+            isChecked={parameters.previewEnabled}
+            onChange={(e) => {
+              setParameters((prev) => ({
+                ...prev,
+                previewEnabled: e.target.checked,
+              }));
+            }}
+          >
+            Enable preview URL
+          </Switch>
+          <FormControl.HelpText>
+            Site URL will be hidden and preview URL will be shown if entry is in
+            draft mode. If entry is in published or changed state, both URLs
+            will be shown.
+          </FormControl.HelpText>
+        </FormControl>
+        {parameters.previewEnabled && (
+          <FormControl isRequired>
+            <FormControl.Label>Site preview URL</FormControl.Label>
+            <TextInput
+              value={parameters.sitePreviewUrl}
+              onChange={(e) =>
+                setParameters((prev) => ({
+                  ...prev,
+                  sitePreviewUrl: e.target.value,
+                }))
+              }
+              name="sitePreviewUrl"
+              type="text"
+              placeholder="https://preview.example.com"
+            />
+            <FormControl.HelpText>
+              Provide the site preview URL. This parameter can be used as{" "}
+              {"{sitePreviewUrl}"} in your URL template.
+            </FormControl.HelpText>
+          </FormControl>
+        )}
       </Form>
     </Flex>
   );
