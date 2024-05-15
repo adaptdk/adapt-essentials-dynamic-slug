@@ -1,3 +1,4 @@
+import { EntrySys } from "@contentful/app-sdk";
 import { EntryMetaSysProps } from "contentful-management";
 
 export const EntryStatus = {
@@ -10,7 +11,9 @@ export const EntryStatus = {
 export type EntryStatusKeys = keyof typeof EntryStatus;
 export type EntryStatusValues = (typeof EntryStatus)[EntryStatusKeys];
 
-export const getEntryStatus = (entrySys: EntryMetaSysProps): EntryStatusValues => {
+export const getEntryStatus = (
+  entrySys: EntryMetaSysProps | EntrySys
+): EntryStatusValues => {
   if (entrySys.archivedVersion) {
     return EntryStatus.ARCHIVED;
   } else if (
