@@ -24,9 +24,6 @@ import { createClient } from "contentful-management";
 import { EntryStatus, getEntryStatus } from "../utils";
 
 const styles = {
-  fixFocus: css({
-    padding: tokens.spacingXs,
-  }),
   infoIcon: css({
     marginRight: tokens.spacingXs,
   }),
@@ -173,7 +170,7 @@ const Field = () => {
 
   return (
     <Stack flexDirection="column" alignItems="flex-start">
-      <TextInput.Group className={styles.fixFocus}>
+      <TextInput.Group>
         <TextInput
           icon={<LinkIcon className={css()} />}
           size="medium"
