@@ -15,6 +15,7 @@ export interface AppInstallationParameters {
   siteUrl?: string;
   previewEnabled?: boolean;
   sitePreviewUrl?: string;
+  previewButtonCaption?: string;
 }
 
 const ConfigScreen = () => {
@@ -22,8 +23,8 @@ const ConfigScreen = () => {
   const sdk = useSDK<ConfigAppSDK>();
 
   /*
-     To use the cma, inject it as follows.
-     If it is not needed, you can remove the next line.
+    To use the cma, inject it as follows.
+    If it is not needed, you can remove the next line.
   */
   // const cma = useCMA();
 
@@ -116,25 +117,42 @@ const ConfigScreen = () => {
           </FormControl.HelpText>
         </FormControl>
         {parameters.previewEnabled && (
-          <FormControl isRequired>
-            <FormControl.Label>Site preview URL</FormControl.Label>
+          <>
+            <FormControl isRequired>
+              <FormControl.Label>Site preview URL</FormControl.Label>
+              <TextInput
+                value={parameters.sitePreviewUrl}
+                onChange={(e) =>
+                  setParameters((prev) => ({
+                    ...prev,
+                    sitePreviewUrl: e.target.value,
+                  }))
+                }
+                name="sitePreviewUrl"
+                type="text"
+                placeholder="https://preview.example.com"
+              />
+              <FormControl.HelpText>
+                Provide the site preview URL. This parameter can be used as{" "}
+                {"{sitePreviewUrl}"} in your URL template.
+              </FormControl.HelpText>
+            </FormControl>
+            <FormControl.Label>Preview button caption</FormControl.Label>
             <TextInput
-              value={parameters.sitePreviewUrl}
+              value={parameters.previewButtonCaption}
               onChange={(e) =>
                 setParameters((prev) => ({
                   ...prev,
-                  sitePreviewUrl: e.target.value,
+                  previewButtonCaption: e.target.value,
                 }))
               }
-              name="sitePreviewUrl"
+              name="previewButtonCaption"
               type="text"
-              placeholder="https://preview.example.com"
             />
             <FormControl.HelpText>
-              Provide the site preview URL. This parameter can be used as{" "}
-              {"{sitePreviewUrl}"} in your URL template.
+              If not set, a link will be shown.
             </FormControl.HelpText>
-          </FormControl>
+          </>
         )}
       </Form>
     </Flex>

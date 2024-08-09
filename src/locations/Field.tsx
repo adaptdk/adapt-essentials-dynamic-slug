@@ -6,6 +6,8 @@ import {
   TextInput,
   TextLink,
   Tooltip,
+  Button,
+  Box,
 } from "@contentful/f36-components";
 import {
   useSDK,
@@ -69,9 +71,12 @@ const Field = () => {
   const [textFields, setTextFields] = useState(collectTextFields());
   const [rawSlugFieldValue, setRawSlugFieldValue] = useState(slugFieldValue);
 
-  const { instance, installation, installation: { previewEnabled = false } } = sdk.parameters;
-  const { template, previewTemplate, fieldToSlugify } =
-    instance;
+  const {
+    instance,
+    installation,
+    installation: { previewEnabled = false, previewButtonCaption },
+  } = sdk.parameters;
+  const { template, previewTemplate, fieldToSlugify } = instance;
 
   const resultingUrl = fillTheTemplate(template, {
     fields: textFields,
@@ -145,17 +150,25 @@ const Field = () => {
   const isDraftInitially = getEntryStatus(entrySys) === EntryStatus.DRAFT;
   const isArchivedInitially = getEntryStatus(entrySys) === EntryStatus.ARCHIVED;
 
-  const [showURL, setShowURL] = useState(!isDraftInitially && !isArchivedInitially);
-  const [showPreviewURL, setShowPreviewURL] = useState(previewEnabled && !isArchivedInitially);
+  const [showURL, setShowURL] = useState(
+    !isDraftInitially && !isArchivedInitially
+  );
+  const [showPreviewURL, setShowPreviewURL] = useState(
+    previewEnabled && !isArchivedInitially
+  );
 
   sdk.entry.onSysChanged((sys) => {
-    cma.entry.get({
-      entryId: sys.id,
-    }).then((entry) => {
-      const status = getEntryStatus(entry.sys);
-      setShowURL(status !== EntryStatus.DRAFT && status !== EntryStatus.ARCHIVED);
-      setShowPreviewURL(previewEnabled && status !== EntryStatus.ARCHIVED);
-    });
+    cma.entry
+      .get({
+        entryId: sys.id,
+      })
+      .then((entry) => {
+        const status = getEntryStatus(entry.sys);
+        setShowURL(
+          status !== EntryStatus.DRAFT && status !== EntryStatus.ARCHIVED
+        );
+        setShowPreviewURL(previewEnabled && status !== EntryStatus.ARCHIVED);
+      });
   });
 
   return (
@@ -173,7 +186,7 @@ const Field = () => {
           variant="secondary"
           icon={<CycleIcon />}
           onClick={resetSlug}
-          aria-label="Unlock"
+          aria-label="reset"
         />
       </TextInput.Group>
       {showURL && (
@@ -195,8 +208,8 @@ const Field = () => {
           )}
         </>
       )}
-      {showPreviewURL && (
-        <>
+      {showPreviewURL && resultingPreviewUrl && !previewButtonCaption && (
+        <Box>
           <Tooltip
             placement="top-start"
             id="url-tooltip"
@@ -207,12 +220,20 @@ const Field = () => {
               <span>Preview URL </span>
             </Flex>
           </Tooltip>
-          {resultingPreviewUrl && (
-            <TextLink target="_blank" href={resultingPreviewUrl}>
-              {resultingPreviewUrl}
-            </TextLink>
-          )}
-        </>
+          <TextLink target="_blank" href={resultingPreviewUrl}>
+            {resultingPreviewUrl}
+          </TextLink>
+        </Box>
+      )}
+      {resultingPreviewUrl && previewButtonCaption && (
+        <Button
+          as="a"
+          href={resultingPreviewUrl}
+          target="_blank"
+          variant="primary"
+        >
+          {previewButtonCaption}
+        </Button>
       )}
     </Stack>
   );
