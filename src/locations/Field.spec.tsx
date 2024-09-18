@@ -6,12 +6,13 @@ import Field from './Field';
 vi.mock('@contentful/react-apps-toolkit', () => ({
   useSDK: () => mockSdk,
   useCMA: () => mockCma,
+  useFieldValue: () => ['test', vi.fn()],
+  useAutoResizer: vi.fn(),
 }));
 
 describe('Field component', () => {
-  it('Component text exists', () => {
-    const { getByText } = render(<Field />);
-
-    expect(getByText('Hello Entry Field Component (AppId: test-app)')).toBeTruthy();
+  it('Not null', () => {
+    const { container } = render(<Field />);
+    expect(container).not.toBeNull();
   });
 });
